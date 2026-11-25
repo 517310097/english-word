@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小学英语单词练习</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Comic Sans MS", "Yuanti SC", "YouYuan", "幼圆", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 50%, #E0F6FF 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* ===== 顶部标题栏 ===== */
+  .header {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+  .score-box {
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+  }
+  .score-box span { color: #FF6B6B; }
+
+  /* ===== 主卡片 ===== */
+  .card {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 30px;
+    padding: 40px 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    text-align: center;
+  }
+
+  /* ===== 进度条 ===== */
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #E8F4FD;
+    border-radius: 6px;
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ECDC4, #44B0E0);
+    border-radius: 6px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 10px;
+  }
+
+  /* ===== 中文提示 ===== */
+  .chinese-word {
+    font-size: 42px;
+    font-weight: bold;
+    color: #2C3E50;
+    margin-bottom: 10px;
+  }
+  .word-hint {
+    font-size: 16px;
+    color: #999;
+    margin-bottom: 30px;
+  }
+
+  /* ===== 字母方框 ===== */
+  .letter-boxes {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+  .letter-box {
+    width: 56px;
+    height: 60px;
+    border: 3px solid #BDD7EE;
+    border-radius: 12px;
+    background: #F8FBFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #2C3E50;
+    text-transform: lowercase;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .letter-box.active {
+    border-color: #44B0E0;
+    background: #E3F2FD;
+    box-shadow: 0 0 12px rgba(68,176,224,0.4);
+  }
+  .letter-box.correct {
+    border-color: #52C41A;
+    background: #F6FFED;
+    color: #389E0D;
+  }
+  .letter-box.wrong {
+    border-color: #FF4D4F;
+    background: #FFF1F0;
+    color: #CF1322;
+    animation: shake 0.4s ease;
+  }
+  .letter-box.revealed {
+    border-color: #FAAD14;
+    background: #FFFBE6;
+    color: #D48806;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* ===== 按钮区 ===== */
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-hint {
+    background: #FFF7E6;
+    color: #D48806;
+    border: 2px solid #FFD591;
+  }
+  .btn-hint:hover { background: #FFF1B8; }
+  .btn-skip {
+    background: #F0F0F0;
+    color: #666;
+  }
+  .btn-skip:hover { background: #E0E0E0; }
+  .btn-next {
+    background: #4ECDC4;
+    color: #fff;
+  }
+  .btn-next:hover { background: #3DBDB4; }
+
+  /* ===== 完成庆祝 ===== */
+  .celebrate {
+    display: none;
+    margin-top: 20px;
+    padding: 15px;
+    background: #F6FFED;
+    border-radius: 15px;
+    color: #389E0D;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .celebrate.show { display: block; animation: pop 0.4s ease; }
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== 结算页面 ===== */
+  .result-page {
+    display: none;
+    text-align: center;
+  }
+  .result-page.show { display: block; }
+  .result-emoji {
+    font-size: 80px;
+    margin-bottom: 20px;
+  }
+  .result-title {
+    font-size: 32px;
+    color: #2C3E50;
+    margin-bottom: 15px;
+  }
+  .result-detail {
+    font-size: 18px;
+    color: #666;
+    line-height: 2;
+    margin-bottom: 30px;
+  }
+  .result-detail strong { color: #FF6B6B; font-size: 24px; }
+
+  /* ===== 彩虹装饰 ===== */
+  .cloud {
+    position: fixed;
+    font-size: 40px;
+    opacity: 0.6;
+    animation: float 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .cloud1 { top: 10%; left: 5%; animation-delay: 0s; }
+  .cloud2 { top: 20%; right: 8%; animation-delay: 2s; }
+  .cloud3 { bottom: 15%; left: 10%; animation-delay: 4s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  /* 隐藏的输入框，用于接收键盘 */
+  .hidden-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    left: -9999px;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 25px 15px; }
+    .chinese-word { font-size: 32px; }
+    .letter-box { width: 42px; height: 48px; font-size: 24px; gap: 6px; }
+    .title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cloud cloud1">☁️</div>
+<div class="cloud cloud2">☁️</div>
+<div class="cloud cloud3">☁️</div>
+
+<div class="header">
+  <div class="title">📚 英语单词练习</div>
+  <div class="score-box">得分：<span id="score">0</span></div>
+</div>
+
+<div class="card">
+  <!-- 练习页面 -->
+  <div id="practice-page">
+    <div class="progress-text">第 <span id="current-num">1</span> / <span id="total-num">10</span> 题</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div class="chinese-word" id="chinese">苹果</div>
+    <div class="word-hint">请输入对应的英语单词</div>
+
+    <div class="letter-boxes" id="boxes"></div>
+
+    <div class="buttons">
+      <button class="btn btn-hint" onclick="showHint()">💡 提示</button>
+      <button class="btn btn-skip" onclick="skipWord()">⏭ 跳过</button>
+    </div>
+
+    <div class="celebrate" id="celebrate">🎉 太棒了！答对啦！</div>
+  </div>
+
+  <!-- 结算页面 -->
+  <div class="result-page" id="result-page">
+    <div class="result-emoji" id="result-emoji">🏆</div>
+    <div class="result-title" id="result-title">练习完成！</div>
+    <div class="result-detail">
+      总共答对 <strong id="final-correct">0</strong> / <span id="final-total">10</span> 题<br>
+      正确率：<strong id="final-rate">0%</strong>
+    </div>
+    <button class="btn btn-next" onclick="restart()">🔄 再练一次</button>
+  </div>
+</div>
+
+<input type="text" class="hidden-input" id="hidden-input" autocomplete="off" autocapitalize="off">
+
+<script>
+// ===== 单词库（小学常用1000词） =====
+const WORD_BANK = [
+  // --- 动物类 ---
+  { word: "cat", cn: "猫" },
+  { word: "dog", cn: "狗" },
+  { word: "pig", cn: "猪" },
+  { word: "cow", cn: "奶牛" },
+  { word: "hen", cn: "母鸡" },
+  { word: "bird", cn: "鸟" },
+  { word: "duck", cn: "鸭子" },
+  { word: "fish", cn: "鱼" },
+  { word: "horse", cn: "马" },
+  { word: "sheep", cn: "绵羊" },
+  { word: "goat", cn: "山羊" },
+  { word: "rabbit", cn: "兔子" },
+  { word: "mouse", cn: "老鼠" },
+  { word: "tiger", cn: "老虎" },
+  { word: "lion", cn: "狮子" },
+  { word: "elephant", cn: "大象" },
+  { word: "monkey", cn: "猴子" },
+  { word: "panda", cn: "熊猫" },
+  { word: "bear", cn: "熊" },
+  { word: "snake", cn: "蛇" },
+  { word: "wolf", cn: "狼" },
+  { word: "fox", cn: "狐狸" },
+  { word: "deer", cn: "鹿" },
+  { word: "camel", cn: "骆驼" },
+  { word: "giraffe", cn: "长颈鹿" },
+  { word: "zebra", cn: "斑马" },
+  { word: "koala", cn: "考拉" },
+  { word: "kangaroo", cn: "袋鼠" },
+  { word: "whale", cn: "鲸鱼" },
+  { word: "shark", cn: "鲨鱼" },
+  { word: "dolphin", cn: "海豚" },
+  { word: "eagle", cn: "鹰" },
+  { word: "parrot", cn: "鹦鹉" },
+  { word: "owl", cn: "猫头鹰" },
+  { word: "swan", cn: "天鹅" },
+  { word: "chicken", cn: "小鸡" },
+  { word: "frog", cn: "青蛙" },
+  { word: "turtle", cn: "乌龟" },
+  { word: "ant", cn: "蚂蚁" },
+  { word: "bee", cn: "蜜蜂" },
+  { word: "butterfly", cn: "蝴蝶" },
+  { word: "fly", cn: "苍蝇" },
+  { word: "spider", cn: "蜘蛛" },
+  { word: "worm", cn: "虫子" },
+  { word: "sheep", cn: "绵羊" },
+  { word: "goose", cn: "鹅" },
+  { word: "donkey", cn: "驴" },
+  { word: "squirrel", cn: "松鼠" },
+  { word: "bat", cn: "蝙蝠" },
+  { word: "crab", cn: "螃蟹" },
+  { word: "shrimp", cn: "虾" },
+  { word: "snail", cn: "蜗牛" },
+  { word: "worm", cn: "蠕虫" },
+
+  // --- 水果类 ---
+  { word: "apple", cn: "苹果" },
+  { word: "banana", cn: "香蕉" },
+  { word: "orange", cn: "橙子" },
+  { word: "pear", cn: "梨" },
+  { word: "peach", cn: "桃子" },
+  { word: "grape", cn: "葡萄" },
+  { word: "watermelon", cn: "西瓜" },
+  { word: "strawberry", cn: "草莓" },
+  { word: "cherry", cn: "樱桃" },
+  { word: "lemon", cn: "柠檬" },
+  { word: "mango", cn: "芒果" },
+  { word: "pineapple", cn: "菠萝" },
+  { word: "coconut", cn: "椰子" },
+  { word: "kiwi", cn: "猕猴桃" },
+  { word: "melon", cn: "甜瓜" },
+  { word: "plum", cn: "李子" },
+  { word: "date", cn: "枣" },
+  { word: "berry", cn: "浆果" },
+  { word: "lychee", cn: "荔枝" },
+  { word: "papaya", cn: "木瓜" },
+
+  // --- 蔬菜类 ---
+  { word: "tomato", cn: "西红柿" },
+  { word: "potato", cn: "土豆" },
+  { word: "carrot", cn: "胡萝卜" },
+  { word: "onion", cn: "洋葱" },
+  { word: "cabbage", cn: "卷心菜" },
+  { word: "radish", cn: "萝卜" },
+  { word: "cucumber", cn: "黄瓜" },
+  { word: "pumpkin", cn: "南瓜" },
+  { word: "eggplant", cn: "茄子" },
+  { word: "pepper", cn: "辣椒" },
+  { word: "bean", cn: "豆子" },
+  { word: "corn", cn: "玉米" },
+  { word: "pea", cn: "豌豆" },
+  { word: "mushroom", cn: "蘑菇" },
+  { word: "garlic", cn: "大蒜" },
+  { word: "ginger", cn: "姜" },
+  { word: "lettuce", cn: "生菜" },
+  { word: "celery", cn: "芹菜" },
+
+  // --- 食物饮料类 ---
+  { word: "egg", cn: "鸡蛋" },
+  { word: "milk", cn: "牛奶" },
+  { word: "bread", cn: "面包" },
+  { word: "cake", cn: "蛋糕" },
+  { word: "rice", cn: "米饭" },
+  { word: "noodle", cn: "面条" },
+  { word: "meat", cn: "肉" },
+  { word: "beef", cn: "牛肉" },
+  { word: "pork", cn: "猪肉" },
+  { word: "chicken", cn: "鸡肉" },
+  { word: "fish", cn: "鱼肉" },
+  { word: "soup", cn: "汤" },
+  { word: "salad", cn: "沙拉" },
+  { word: "sandwich", cn: "三明治" },
+  { word: "hamburger", cn: "汉堡包" },
+  { word: "pizza", cn: "披萨" },
+  { word: "hotdog", cn: "热狗" },
+  { word: "cheese", cn: "奶酪" },
+  { word: "butter", cn: "黄油" },
+  { word: "sugar", cn: "糖" },
+  { word: "salt", cn: "盐" },
+  { word: "oil", cn: "油" },
+  { word: "juice", cn: "果汁" },
+  { word: "water", cn: "水" },
+  { word: "tea", cn: "茶" },
+  { word: "coffee", cn: "咖啡" },
+  { word: "cola", cn: "可乐" },
+  { word: "candy", cn: "糖果" },
+  { word: "chocolate", cn: "巧克力" },
+  { word: "cookie", cn: "饼干" },
+  { word: "pie", cn: "派" },
+  { word: "icecream", cn: "冰淇淋" },
+  { word: "honey", cn: "蜂蜜" },
+  { word: "jam", cn: "果酱" },
+  { word: "biscuit", cn: "小饼干" },
+  { word: "dumpling", cn: "饺子" },
+  { word: "porridge", cn: "粥" },
+  { word: "bacon", cn: "培根" },
+  { word: "sausage", cn: "香肠" },
+  { word: "steak", cn: "牛排" },
+  { word: "fry", cn: "薯条" },
+  { word: "chip", cn: "薯片" },
+
+  // --- 颜色类 ---
+  { word: "red", cn: "红色" },
+  { word: "blue", cn: "蓝色" },
+  { word: "green", cn: "绿色" },
+  { word: "yellow", cn: "黄色" },
+  { word: "black", cn: "黑色" },
+  { word: "white", cn: "白色" },
+  { word: "pink", cn: "粉色" },
+  { word: "purple", cn: "紫色" },
+  { word: "brown", cn: "棕色" },
+  { word: "orange", cn: "橙色" },
+  { word: "gray", cn: "灰色" },
+  { word: "gold", cn: "金色" },
+  { word: "silver", cn: "银色" },
+  { word: "golden", cn: "金黄色" },
+  { word: "dark", cn: "深色的" },
+  { word: "light", cn: "浅色的" },
+
+  // --- 数字类 ---
+  { word: "one", cn: "一" },
+  { word: "two", cn: "二" },
+  { word: "three", cn: "三" },
+  { word: "four", cn: "四" },
+  { word: "five", cn: "五" },
+  { word: "six", cn: "六" },
+  { word: "seven", cn: "七" },
+  { word: "eight", cn: "八" },
+  { word: "nine", cn: "九" },
+  { word: "ten", cn: "十" },
+  { word: "eleven", cn: "十一" },
+  { word: "twelve", cn: "十二" },
+  { word: "thirteen", cn: "十三" },
+  { word: "fourteen", cn: "十四" },
+  { word: "fifteen", cn: "十五" },
+  { word: "sixteen", cn: "十六" },
+  { word: "seventeen", cn: "十七" },
+  { word: "eighteen", cn: "十八" },
+  { word: "nineteen", cn: "十九" },
+  { word: "twenty", cn: "二十" },
+  { word: "thirty", cn: "三十" },
+  { word: "forty", cn: "四十" },
+  { word: "fifty", cn: "五十" },
+  { word: "hundred", cn: "一百" },
+  { word: "thousand", cn: "一千" },
+  { word: "first", cn: "第一" },
+  { word: "second", cn: "第二" },
+  { word: "third", cn: "第三" },
+  { word: "many", cn: "许多" },
+  { word: "much", cn: "很多" },
+  { word: "few", cn: "很少" },
+  { word: "little", cn: "一点" },
+  { word: "half", cn: "一半" },
+
+  // --- 家庭成员类 ---
+  { word: "father", cn: "父亲" },
+  { word: "mother", cn: "母亲" },
+  { word: "brother", cn: "兄弟" },
+  { word: "sister", cn: "姐妹" },
+  { word: "son", cn: "儿子" },
+  { word: "daughter", cn: "女儿" },
+  { word: "grandpa", cn: "爷爷" },
+  { word: "grandma", cn: "奶奶" },
+  { word: "grandfather", cn: "祖父" },
+  { word: "grandmother", cn: "祖母" },
+  { word: "uncle", cn: "叔叔" },
+  { word: "aunt", cn: "阿姨" },
+  { word: "cousin", cn: "堂兄妹" },
+  { word: "family", cn: "家庭" },
+  { word: "parent", cn: "父母" },
+  { word: "baby", cn: "婴儿" },
+  { word: "child", cn: "孩子" },
+  { word: "kid", cn: "小孩" },
+  { word: "boy", cn: "男孩" },
+  { word: "girl", cn: "女孩" },
+  { word: "man", cn: "男人" },
+  { word: "woman", cn: "女人" },
+  { word: "people", cn: "人们" },
+  { word: "friend", cn: "朋友" },
+
+  // --- 身体部位类 ---
+  { word: "eye", cn: "眼睛" },
+  { word: "nose", cn: "鼻子" },
+  { word: "mouth", cn: "嘴巴" },
+  { word: "ear", cn: "耳朵" },
+  { word: "hand", cn: "手" },
+  { word: "foot", cn: "脚" },
+  { word: "face", cn: "脸" },
+  { word: "head", cn: "头" },
+  { word: "hair", cn: "头发" },
+  { word: "neck", cn: "脖子" },
+  { word: "arm", cn: "手臂" },
+  { word: "leg", cn: "腿" },
+  { word: "finger", cn: "手指" },
+  { word: "toe", cn: "脚趾" },
+  { word: "knee", cn: "膝盖" },
+  { word: "body", cn: "身体" },
+  { word: "back", cn: "后背" },
+  { word: "heart", cn: "心脏" },
+  { word: "tooth", cn: "牙齿" },
+  { word: "tongue", cn: "舌头" },
+  { word: "lip", cn: "嘴唇" },
+  { word: "skin", cn: "皮肤" },
+  { word: "bone", cn: "骨头" },
+  { word: "blood", cn: "血" },
+  { word: "shoulder", cn: "肩膀" },
+  { word: "chest", cn: "胸部" },
+  { word: "stomach", cn: "胃" },
+  { word: "hand", cn: "手" },
+
+  // --- 学校用品类 ---
+  { word: "book", cn: "书" },
+  { word: "pen", cn: "钢笔" },
+  { word: "pencil", cn: "铅笔" },
+  { word: "ruler", cn: "尺子" },
+  { word: "eraser", cn: "橡皮" },
+  { word: "bag", cn: "书包" },
+  { word: "desk", cn: "课桌" },
+  { word: "chair", cn: "椅子" },
+  { word: "blackboard", cn: "黑板" },
+  { word: "paper", cn: "纸" },
+  { word: "ink", cn: "墨水" },
+  { word: "crayon", cn: "蜡笔" },
+  { word: "marker", cn: "马克笔" },
+  { word: "scissors", cn: "剪刀" },
+  { word: "glue", cn: "胶水" },
+  { word: "tape", cn: "胶带" },
+  { word: "notebook", cn: "笔记本" },
+  { word: "textbook", cn: "课本" },
+  { word: "dictionary", cn: "字典" },
+  { word: "map", cn: "地图" },
+  { word: "clock", cn: "时钟" },
+  { word: "computer", cn: "电脑" },
+  { word: "screen", cn: "屏幕" },
+  { word: "keyboard", cn: "键盘" },
+  { word: "mouse", cn: "鼠标" },
+  { word: "printer", cn: "打印机" },
+  { word: "library", cn: "图书馆" },
+  { word: "classroom", cn: "教室" },
+  { word: "playground", cn: "操场" },
+  { word: "school", cn: "学校" },
+  { word: "teacher", cn: "老师" },
+  { word: "student", cn: "学生" },
+  { word: "classmate", cn: "同学" },
+  { word: "lesson", cn: "课程" },
+  { word: "homework", cn: "作业" },
+  { word: "exam", cn: "考试" },
+  { word: "test", cn: "测验" },
+  { word: "grade", cn: "年级" },
+  { word: "subject", cn: "科目" },
+  { word: "English", cn: "英语" },
+  { word: "Chinese", cn: "语文" },
+  { word: "math", cn: "数学" },
+  { word: "music", cn: "音乐" },
+  { word: "art", cn: "美术" },
+  { word: "PE", cn: "体育" },
+  { word: "science", cn: "科学" },
+  { word: "history", cn: "历史" },
+  { word: "drawing", cn: "画画" },
+  { word: "reading", cn: "阅读" },
+  { word: "writing", cn: "写作" },
+
+  // --- 交通工具类 ---
+  { word: "car", cn: "汽车" },
+  { word: "bus", cn: "公共汽车" },
+  { word: "bike", cn: "自行车" },
+  { word: "train", cn: "火车" },
+  { word: "plane", cn: "飞机" },
+  { word: "ship", cn: "轮船" },
+  { word: "boat", cn: "小船" },
+  { word: "taxi", cn: "出租车" },
+  { word: "subway", cn: "地铁" },
+  { word: "truck", cn: "卡车" },
+  { word: "van", cn: "面包车" },
+  { word: "motorcycle", cn: "摩托车" },
+  { word: "helicopter", cn: "直升机" },
+  { word: "rocket", cn: "火箭" },
+  { word: "wheels", cn: "车轮" },
+  { word: "engine", cn: "发动机" },
+  { word: "road", cn: "马路" },
+  { word: "street", cn: "街道" },
+  { word: "bridge", cn: "桥" },
+  { word: "station", cn: "车站" },
+  { word: "airport", cn: "机场" },
+  { word: "port", cn: "港口" },
+  { word: "ticket", cn: "车票" },
+  { word: "drive", cn: "驾驶" },
+  { word: "ride", cn: "骑" },
+  { word: "fly", cn: "飞" },
+  { word: "sail", cn: "航行" },
+  { word: "stop", cn: "车站" },
+
+  // --- 天气自然类 ---
+  { word: "sun", cn: "太阳" },
+  { word: "moon", cn: "月亮" },
+  { word: "star", cn: "星星" },
+  { word: "sky", cn: "天空" },
+  { word: "cloud", cn: "云" },
+  { word: "rain", cn: "雨" },
+  { word: "snow", cn: "雪" },
+  { word: "wind", cn: "风" },
+  { word: "ice", cn: "冰" },
+  { word: "storm", cn: "暴风雨" },
+  { word: "rainbow", cn: "彩虹" },
+  { word: "weather", cn: "天气" },
+  { word: "sunny", cn: "晴朗的" },
+  { word: "rainy", cn: "下雨的" },
+  { word: "snowy", cn: "下雪的" },
+  { word: "windy", cn: "有风的" },
+  { word: "cloudy", cn: "多云的" },
+  { word: "hot", cn: "热的" },
+  { word: "cold", cn: "冷的" },
+  { word: "warm", cn: "温暖的" },
+  { word: "cool", cn: "凉爽的" },
+  { word: "tree", cn: "树" },
+  { word: "flower", cn: "花" },
+  { word: "grass", cn: "草" },
+  { word: "leaf", cn: "叶子" },
+  { word: "root", cn: "根" },
+  { word: "seed", cn: "种子" },
+  { word: "forest", cn: "森林" },
+  { word: "mountain", cn: "山" },
+  { word: "river", cn: "河流" },
+  { word: "lake", cn: "湖" },
+  { word: "sea", cn: "大海" },
+  { word: "ocean", cn: "海洋" },
+  { word: "beach", cn: "海滩" },
+  { word: "island", cn: "岛屿" },
+  { word: "desert", cn: "沙漠" },
+  { word: "field", cn: "田野" },
+  { word: "ground", cn: "地面" },
+  { word: "hill", cn: "小山" },
+  { word: "stone", cn: "石头" },
+  { word: "sand", cn: "沙子" },
+  { word: "dust", cn: "灰尘" },
+
+  // --- 衣服类 ---
+  { word: "shirt", cn: "衬衫" },
+  { word: "T-shirt", cn: "T恤" },
+  { word: "coat", cn: "外套" },
+  { word: "jacket", cn: "夹克" },
+  { word: "dress", cn: "连衣裙" },
+  { word: "skirt", cn: "裙子" },
+  { word: "pants", cn: "裤子" },
+  { word: "shorts", cn: "短裤" },
+  { word: "jeans", cn: "牛仔裤" },
+  { word: "sock", cn: "袜子" },
+  { word: "shoe", cn: "鞋子" },
+  { word: "boot", cn: "靴子" },
+  { word: "hat", cn: "帽子" },
+  { word: "cap", cn: "鸭舌帽" },
+  { word: "glove", cn: "手套" },
+  { word: "scarf", cn: "围巾" },
+  { word: "belt", cn: "腰带" },
+  { word: "uniform", cn: "制服" },
+  { word: "sweater", cn: "毛衣" },
+  { word: "hoodie", cn: "连帽衫" },
+  { word: "pocket", cn: "口袋" },
+  { word: "button", cn: "纽扣" },
+  { word: "zipper", cn: "拉链" },
+  { word: "silk", cn: "丝绸" },
+  { word: "cotton", cn: "棉花" },
+
+  // --- 动词类 ---
+  { word: "run", cn: "跑" },
+  { word: "walk", cn: "走" },
+  { word: "jump", cn: "跳" },
+  { word: "swim", cn: "游泳" },
+  { word: "fly", cn: "飞" },
+  { word: "climb", cn: "爬" },
+  { word: "dance", cn: "跳舞" },
+  { word: "sing", cn: "唱歌" },
+  { word: "read", cn: "读" },
+  { word: "write", cn: "写" },
+  { word: "draw", cn: "画" },
+  { word: "paint", cn: "绘画" },
+  { word: "eat", cn: "吃" },
+  { word: "drink", cn: "喝" },
+  { word: "cook", cn: "做饭" },
+  { word: "sleep", cn: "睡觉" },
+  { word: "wake", cn: "醒来" },
+  { word: "sit", cn: "坐" },
+  { word: "stand", cn: "站" },
+  { word: "lie", cn: "躺" },
+  { word: "walk", cn: "走" },
+  { word: "talk", cn: "说话" },
+  { word: "speak", cn: "讲" },
+  { word: "say", cn: "说" },
+  { word: "tell", cn: "告诉" },
+  { word: "ask", cn: "问" },
+  { word: "answer", cn: "回答" },
+  { word: "listen", cn: "听" },
+  { word: "hear", cn: "听见" },
+  { word: "see", cn: "看见" },
+  { word: "look", cn: "看" },
+  { word: "watch", cn: "观看" },
+  { word: "play", cn: "玩" },
+  { word: "work", cn: "工作" },
+  { word: "study", cn: "学习" },
+  { word: "learn", cn: "学会" },
+  { word: "teach", cn: "教" },
+  { word: "help", cn: "帮助" },
+  { word: "give", cn: "给" },
+  { word: "take", cn: "拿" },
+  { word: "get", cn: "得到" },
+  { word: "make", cn: "制作" },
+  { word: "do", cn: "做" },
+  { word: "go", cn: "去" },
+  { word: "come", cn: "来" },
+  { word: "bring", cn: "带来" },
+  { word: "buy", cn: "买" },
+  { word: "sell", cn: "卖" },
+  { word: "pay", cn: "付钱" },
+  { word: "spend", cn: "花费" },
+  { word: "open", cn: "打开" },
+  { word: "close", cn: "关闭" },
+  { word: "turn", cn: "转动" },
+  { word: "push", cn: "推" },
+  { word: "pull", cn: "拉" },
+  { word: "carry", cn: "搬运" },
+  { word: "hold", cn: "握住" },
+  { word: "catch", cn: "抓住" },
+  { word: "throw", cn: "扔" },
+  { word: "kick", cn: "踢" },
+  { word: "hit", cn: "打" },
+  { word: "break", cn: "打破" },
+  { word: "fix", cn: "修理" },
+  { word: "build", cn: "建造" },
+  { word: "clean", cn: "打扫" },
+  { word: "wash", cn: "洗" },
+  { word: "brush", cn: "刷" },
+  { word: "cut", cn: "切" },
+  { word: "add", cn: "加" },
+  { word: "mix", cn: "混合" },
+  { word: "put", cn: "放" },
+  { word: "set", cn: "放置" },
+  { word: "find", cn: "找到" },
+  { word: "lose", cn: "丢失" },
+  { word: "keep", cn: "保持" },
+  { word: "stop", cn: "停止" },
+  { word: "start", cn: "开始" },
+  { word: "begin", cn: "开始" },
+  { word: "finish", cn: "完成" },
+  { word: "end", cn: "结束" },
+  { word: "wait", cn: "等待" },
+  { word: "hurry", cn: "匆忙" },
+  { word: "rush", cn: "冲" },
+  { word: "follow", cn: "跟随" },
+  { word: "lead", cn: "带领" },
+  { word: "leave", cn: "离开" },
+  { word: "arrive", cn: "到达" },
+  { word: "stay", cn: "停留" },
+  { word: "live", cn: "居住" },
+  { word: "love", cn: "爱" },
+  { word: "like", cn: "喜欢" },
+  { word: "hate", cn: "讨厌" },
+  { word: "want", cn: "想要" },
+  { word: "need", cn: "需要" },
+  { word: "hope", cn: "希望" },
+  { word: "wish", cn: "祝愿" },
+  { word: "think", cn: "想" },
+  { word: "know", cn: "知道" },
+  { word: "believe", cn: "相信" },
+  { word: "remember", cn: "记得" },
+  { word: "forget", cn: "忘记" },
+  { word: "understand", cn: "理解" },
+  { word: "guess", cn: "猜" },
+  { word: "try", cn: "尝试" },
+  { word: "help", cn: "帮助" },
+  { word: "call", cn: "打电话" },
+  { word: "mail", cn: "邮寄" },
+  { word: "sing", cn: "唱歌" },
+  { word: "cry", cn: "哭" },
+  { word: "laugh", cn: "笑" },
+  { word: "smile", cn: "微笑" },
+  { word: "shout", cn: "喊叫" },
+  { word: "whisper", cn: "耳语" },
+
+  // --- 形容词类 ---
+  { word: "happy", cn: "开心的" },
+  { word: "sad", cn: "伤心的" },
+  { word: "angry", cn: "生气的" },
+  { word: "tired", cn: "累的" },
+  { word: "hungry", cn: "饿的" },
+  { word: "thirsty", cn: "渴的" },
+  { word: "sick", cn: "生病的" },
+  { word: "healthy", cn: "健康的" },
+  { word: "big", cn: "大的" },
+  { word: "small", cn: "小的" },
+  { word: "long", cn: "长的" },
+  { word: "short", cn: "短的" },
+  { word: "tall", cn: "高的" },
+  { word: "wide", cn: "宽的" },
+  { word: "narrow", cn: "窄的" },
+  { word: "thick", cn: "厚的" },
+  { word: "thin", cn: "薄的" },
+  { word: "heavy", cn: "重的" },
+  { word: "light", cn: "轻的" },
+  { word: "fast", cn: "快的" },
+  { word: "slow", cn: "慢的" },
+  { word: "quick", cn: "迅速的" },
+  { word: "early", cn: "早的" },
+  { word: "late", cn: "晚的" },
+  { word: "new", cn: "新的" },
+  { word: "old", cn: "旧的" },
+  { word: "young", cn: "年轻的" },
+  { word: "good", cn: "好的" },
+  { word: "bad", cn: "坏的" },
+  { word: "great", cn: "棒的" },
+  { word: "nice", cn: "好的" },
+  { word: "fine", cn: "好的" },
+  { word: "beautiful", cn: "美丽的" },
+  { word: "pretty", cn: "漂亮的" },
+  { word: "ugly", cn: "丑的" },
+  { word: "cute", cn: "可爱的" },
+  { word: "lovely", cn: "可爱的" },
+  { word: "smart", cn: "聪明的" },
+  { word: "clever", cn: "聪明的" },
+  { word: "stupid", cn: "笨的" },
+  { word: "lazy", cn: "懒的" },
+  { word: "busy", cn: "忙的" },
+  { word: "free", cn: "空闲的" },
+  { word: "rich", cn: "富有的" },
+  { word: "poor", cn: "穷的" },
+  { word: "strong", cn: "强壮的" },
+  { word: "weak", cn: "虚弱的" },
+  { word: "soft", cn: "软的" },
+  { word: "hard", cn: "硬的" },
+  { word: "smooth", cn: "光滑的" },
+  { word: "rough", cn: "粗糙的" },
+  { word: "wet", cn: "湿的" },
+  { word: "dry", cn: "干的" },
+  { word: "clean", cn: "干净的" },
+  { word: "dirty", cn: "脏的" },
+  { word: "open", cn: "开着的" },
+  { word: "closed", cn: "关着的" },
+  { word: "full", cn: "满的" },
+  { word: "empty", cn: "空的" },
+  { word: "easy", cn: "容易的" },
+  { word: "hard", cn: "困难的" },
+  { word: "difficult", cn: "难的" },
+  { word: "important", cn: "重要的" },
+  { word: "famous", cn: "著名的" },
+  { word: "different", cn: "不同的" },
+  { word: "same", cn: "相同的" },
+  { word: "right", cn: "正确的" },
+  { word: "wrong", cn: "错误的" },
+  { word: "true", cn: "真的" },
+  { word: "false", cn: "假的" },
+  { word: "real", cn: "真实的" },
+  { word: "special", cn: "特别的" },
+  { word: "usual", cn: "通常的" },
+  { word: "common", cn: "普通的" },
+  { word: "lucky", cn: "幸运的" },
+  { word: "safe", cn: "安全的" },
+  { word: "dangerous", cn: "危险的" },
+  { word: "quiet", cn: "安静的" },
+  { word: "noisy", cn: "吵闹的" },
+  { word: "loud", cn: "大声的" },
+  { word: "sweet", cn: "甜的" },
+  { word: "sour", cn: "酸的" },
+  { word: "bitter", cn: "苦的" },
+  { word: "spicy", cn: "辣的" },
+  { word: "delicious", cn: "美味的" },
+  { word: "fresh", cn: "新鲜的" },
+  { word: "expensive", cn: "贵的" },
+  { word: "cheap", cn: "便宜的" },
+
+  // --- 地点场所类 ---
+  { word: "house", cn: "房子" },
+  { word: "home", cn: "家" },
+  { word: "room", cn: "房间" },
+  { word: "bedroom", cn: "卧室" },
+  { word: "bathroom", cn: "浴室" },
+  { word: "kitchen", cn: "厨房" },
+  { word: "living", cn: "客厅" },
+  { word: "door", cn: "门" },
+  { word: "window", cn: "窗户" },
+  { word: "wall", cn: "墙" },
+  { word: "floor", cn: "地板" },
+  { word: "ceiling", cn: "天花板" },
+  { word: "stairs", cn: "楼梯" },
+  { word: "garden", cn: "花园" },
+  { word: "yard", cn: "院子" },
+  { word: "park", cn: "公园" },
+  { word: "zoo", cn: "动物园" },
+  { word: "museum", cn: "博物馆" },
+  { word: "library", cn: "图书馆" },
+  { word: "hospital", cn: "医院" },
+  { word: "bank", cn: "银行" },
+  { word: "shop", cn: "商店" },
+  { word: "store", cn: "店铺" },
+  { word: "market", cn: "市场" },
+  { word: "hotel", cn: "酒店" },
+  { word: "restaurant", cn: "餐馆" },
+  { word: "cafe", cn: "咖啡馆" },
+  { word: "cinema", cn: "电影院" },
+  { word: "theater", cn: "剧院" },
+  { word: "church", cn: "教堂" },
+  { word: "factory", cn: "工厂" },
+  { word: "farm", cn: "农场" },
+  { word: "village", cn: "村庄" },
+  { word: "town", cn: "城镇" },
+  { word: "city", cn: "城市" },
+  { word: "country", cn: "国家" },
+  { word: "world", cn: "世界" },
+  { word: "China", cn: "中国" },
+  { word: "Beijing", cn: "北京" },
+  { word: "place", cn: "地方" },
+  { word: "part", cn: "部分" },
+  { word: "side", cn: "边" },
+  { word: "top", cn: "顶部" },
+  { word: "bottom", cn: "底部" },
+  { word: "middle", cn: "中间" },
+  { word: "center", cn: "中心" },
+  { word: "corner", cn: "角落" },
+  { word: "front", cn: "前面" },
+  { word: "back", cn: "后面" },
+  { word: "left", cn: "左边" },
+  { word: "right", cn: "右边" },
+
+  // --- 时间日期类 ---
+  { word: "day", cn: "天" },
+  { word: "week", cn: "周" },
+  { word: "month", cn: "月" },
+  { word: "year", cn: "年" },
+  { word: "hour", cn: "小时" },
+  { word: "minute", cn: "分钟" },
+  { word: "second", cn: "秒" },
+  { word: "morning", cn: "早上" },
+  { word: "afternoon", cn: "下午" },
+  { word: "evening", cn: "傍晚" },
+  { word: "night", cn: "夜晚" },
+  { word: "noon", cn: "中午" },
+  { word: "today", cn: "今天" },
+  { word: "tomorrow", cn: "明天" },
+  { word: "yesterday", cn: "昨天" },
+  { word: "now", cn: "现在" },
+  { word: "then", cn: "那时" },
+  { word: "soon", cn: "很快" },
+  { word: "late", cn: "晚" },
+  { word: "early", cn: "早" },
+  { word: "always", cn: "总是" },
+  { word: "often", cn: "经常" },
+  { word: "sometimes", cn: "有时" },
+  { word: "never", cn: "从不" },
+  { word: "Monday", cn: "星期一" },
+  { word: "Tuesday", cn: "星期二" },
+  { word: "Wednesday", cn: "星期三" },
+  { word: "Thursday", cn: "星期四" },
+  { word: "Friday", cn: "星期五" },
+  { word: "Saturday", cn: "星期六" },
+  { word: "Sunday", cn: "星期日" },
+  { word: "weekend", cn: "周末" },
+  { word: "January", cn: "一月" },
+  { word: "February", cn: "二月" },
+  { word: "March", cn: "三月" },
+  { word: "April", cn: "四月" },
+  { word: "May", cn: "五月" },
+  { word: "June", cn: "六月" },
+  { word: "July", cn: "七月" },
+  { word: "August", cn: "八月" },
+  { word: "September", cn: "九月" },
+  { word: "October", cn: "十月" },
+  { word: "November", cn: "十一月" },
+  { word: "December", cn: "十二月" },
+  { word: "spring", cn: "春天" },
+  { word: "summer", cn: "夏天" },
+  { word: "autumn", cn: "秋天" },
+  { word: "winter", cn: "冬天" },
+  { word: "season", cn: "季节" },
+  { word: "holiday", cn: "假日" },
+  { word: "festival", cn: "节日" },
+  { word: "birthday", cn: "生日" },
+
+  // --- 家具物品类 ---
+  { word: "bed", cn: "床" },
+  { word: "pillow", cn: "枕头" },
+  { word: "blanket", cn: "毯子" },
+  { word: "quilt", cn: "被子" },
+  { word: "sofa", cn: "沙发" },
+  { word: "table", cn: "桌子" },
+  { word: "desk", cn: "书桌" },
+  { word: "chair", cn: "椅子" },
+  { word: "shelf", cn: "架子" },
+  { word: "lamp", cn: "台灯" },
+  { word: "light", cn: "灯" },
+  { word: "mirror", cn: "镜子" },
+  { word: "clock", cn: "钟" },
+  { word: "phone", cn: "电话" },
+  { word: "TV", cn: "电视" },
+  { word: "radio", cn: "收音机" },
+  { word: "fridge", cn: "冰箱" },
+  { word: "oven", cn: "烤箱" },
+  { word: "stove", cn: "炉子" },
+  { word: "sink", cn: "水槽" },
+  { word: "toilet", cn: "马桶" },
+  { word: "towel", cn: "毛巾" },
+  { word: "soap", cn: "肥皂" },
+  { word: "toothbrush", cn: "牙刷" },
+  { word: "cup", cn: "杯子" },
+  { word: "glass", cn: "玻璃杯" },
+  { word: "bottle", cn: "瓶子" },
+  { word: "bowl", cn: "碗" },
+  { word: "plate", cn: "盘子" },
+  { word: "spoon", cn: "勺子" },
+  { word: "fork", cn: "叉子" },
+  { word: "knife", cn: "刀" },
+  { word: "chopsticks", cn: "筷子" },
+  { word: "pot", cn: "锅" },
+  { word: "basket", cn: "篮子" },
+  { word: "box", cn: "盒子" },
+  { word: "bag", cn: "袋子" },
+  { word: "wallet", cn: "钱包" },
+  { word: "key", cn: "钥匙" },
+  { word: "lock", cn: "锁" },
+  { word: "string", cn: "绳子" },
+  { word: "rope", cn: "粗绳" },
+  { word: "wire", cn: "电线" },
+
+  // --- 职业类 ---
+  { word: "doctor", cn: "医生" },
+  { word: "nurse", cn: "护士" },
+  { word: "teacher", cn: "教师" },
+  { word: "farmer", cn: "农民" },
+  { word: "worker", cn: "工人" },
+  { word: "driver", cn: "司机" },
+  { word: "cook", cn: "厨师" },
+  { word: "police", cn: "警察" },
+  { word: "fireman", cn: "消防员" },
+  { word: "postman", cn: "邮递员" },
+  { word: "pilot", cn: "飞行员" },
+  { word: "singer", cn: "歌手" },
+  { word: "dancer", cn: "舞者" },
+  { word: "actor", cn: "演员" },
+  { word: "artist", cn: "艺术家" },
+  { word: "writer", cn: "作家" },
+  { word: "poet", cn: "诗人" },
+  { word: "player", cn: "运动员" },
+  { word: "coach", cn: "教练" },
+  { word: "scientist", cn: "科学家" },
+  { word: "dentist", cn: "牙医" },
+  { word: "vet", cn: "兽医" },
+  { word: "waiter", cn: "服务员" },
+  { word: "barber", cn: "理发师" },
+  { word: "tailor", cn: "裁缝" },
+  { word: "engineer", cn: "工程师" },
+  { word: "lawyer", cn: "律师" },
+  { word: "judge", cn: "法官" },
+  { word: "king", cn: "国王" },
+  { word: "queen", cn: "王后" },
+
+  // --- 形状方位类 ---
+  { word: "circle", cn: "圆形" },
+  { word: "square", cn: "正方形" },
+  { word: "triangle", cn: "三角形" },
+  { word: "line", cn: "直线" },
+  { word: "dot", cn: "点" },
+  { word: "star", cn: "星形" },
+  { word: "heart", cn: "心形" },
+  { word: "shape", cn: "形状" },
+  { word: "around", cn: "周围" },
+  { word: "along", cn: "沿着" },
+  { word: "across", cn: "穿过" },
+  { word: "through", cn: "通过" },
+  { word: "between", cn: "在...之间" },
+  { word: "among", cn: "在...之中" },
+  { word: "under", cn: "在...下面" },
+  { word: "over", cn: "在...上方" },
+  { word: "above", cn: "在...上面" },
+  { word: "below", cn: "在...下面" },
+  { word: "beside", cn: "在旁边" },
+  { word: "behind", cn: "在后面" },
+  { word: "near", cn: "近的" },
+  { word: "far", cn: "远的" },
+
+  // --- 其他常用词 ---
+  { word: "hello", cn: "你好" },
+  { word: "hi", cn: "嗨" },
+  { word: "goodbye", cn: "再见" },
+  { word: "bye", cn: "拜" },
+  { word: "please", cn: "请" },
+  { word: "thanks", cn: "谢谢" },
+  { word: "sorry", cn: "对不起" },
+  { word: "welcome", cn: "欢迎" },
+  { word: "yes", cn: "是" },
+  { word: "no", cn: "不" },
+  { word: "ok", cn: "好的" },
+  { word: "not", cn: "不" },
+  { word: "and", cn: "和" },
+  { word: "but", cn: "但是" },
+  { word: "or", cn: "或者" },
+  { word: "if", cn: "如果" },
+  { word: "because", cn: "因为" },
+  { word: "so", cn: "所以" },
+  { word: "very", cn: "非常" },
+  { word: "too", cn: "也" },
+  { word: "also", cn: "也" },
+  { word: "only", cn: "只有" },
+  { word: "just", cn: "刚刚" },
+  { word: "even", cn: "甚至" },
+  { word: "here", cn: "这里" },
+  { word: "there", cn: "那里" },
+  { word: "this", cn: "这个" },
+  { word: "that", cn: "那个" },
+  { word: "these", cn: "这些" },
+  { word: "those", cn: "那些" },
+  { word: "what", cn: "什么" },
+  { word: "who", cn: "谁" },
+  { word: "where", cn: "哪里" },
+  { word: "when", cn: "什么时候" },
+  { word: "why", cn: "为什么" },
+  { word: "how", cn: "怎样" },
+  { word: "which", cn: "哪个" },
+  { word: "whose", cn: "谁的" },
+  { word: "some", cn: "一些" },
+  { word: "any", cn: "任何" },
+  { word: "all", cn: "所有" },
+  { word: "both", cn: "两者都" },
+  { word: "each", cn: "每个" },
+  { word: "every", cn: "每一个" },
+  { word: "other", cn: "其他的" },
+  { word: "another", cn: "另一个" },
+  { word: "same", cn: "相同的" },
+  { word: "own", cn: "自己的" },
+  { word: "can", cn: "能" },
+  { word: "could", cn: "能(过去)" },
+  { word: "will", cn: "将要" },
+  { word: "would", cn: "愿意" },
+  { word: "shall", cn: "应该" },
+  { word: "should", cn: "应该" },
+  { word: "may", cn: "可以" },
+  { word: "might", cn: "可能" },
+  { word: "must", cn: "必须" },
+  { word: "have", cn: "有" },
+  { word: "has", cn: "有(三单)" },
+  { word: "had", cn: "有(过去)" },
+  { word: "do", cn: "做" },
+  { word: "does", cn: "做(三单)" },
+  { word: "did", cn: "做(过去)" },
+  { word: "am", cn: "是" },
+  { word: "is", cn: "是" },
+  { word: "are", cn: "是" },
+  { word: "was", cn: "是(过去)" },
+  { word: "were", cn: "是(过去)" },
+  { word: "be", cn: "是" },
+  { word: "it", cn: "它" },
+  { word: "he", cn: "他" },
+  { word: "she", cn: "她" },
+  { word: "they", cn: "他们" },
+  { word: "we", cn: "我们" },
+  { word: "you", cn: "你" },
+  { word: "I", cn: "我" },
+  { word: "me", cn: "我(宾格)" },
+  { word: "him", cn: "他(宾格)" },
+  { word: "her", cn: "她(宾格)" },
+  { word: "us", cn: "我们(宾格)" },
+  { word: "them", cn: "他们(宾格)" },
+  { word: "my", cn: "我的" },
+  { word: "your", cn: "你的" },
+  { word: "his", cn: "他的" },
+  { word: "its", cn: "它的" },
+  { word: "our", cn: "我们的" },
+  { word: "their", cn: "他们的" },
+  { word: "game", cn: "游戏" },
+  { word: "ball", cn: "球" },
+  { word: "toy", cn: "玩具" },
+  { word: "doll", cn: "洋娃娃" },
+  { word: "kite", cn: "风筝" },
+  { word: "balloon", cn: "气球" },
+  { word: "gift", cn: "礼物" },
+  { word: "party", cn: "聚会" },
+  { word: "prize", cn: "奖品" },
+  { word: "team", cn: "队伍" },
+  { word: "race", cn: "比赛" },
+  { word: "match", cn: "比赛" },
+  { word: "sport", cn: "运动" },
+  { word: "swim", cn: "游泳" },
+  { word: "goal", cn: "进球" },
+  { word: "winner", cn: "获胜者" },
+  { word: "loser", cn: "失败者" },
+  { word: "money", cn: "钱" },
+  { word: "price", cn: "价格" },
+  { word: "dollar", cn: "美元" },
+  { word: "cent", cn: "美分" },
+  { word: "yuan", cn: "元" },
+  { word: "shop", cn: "购物" },
+  { word: "sell", cn: "卖" },
+  { word: "buy", cn: "买" },
+  { word: "cost", cn: "花费" },
+  { word: "change", cn: "找零" },
+  { word: "picture", cn: "图片" },
+  { word: "photo", cn: "照片" },
+  { word: "camera", cn: "相机" },
+  { word: "movie", cn: "电影" },
+  { word: "song", cn: "歌曲" },
+  { word: "music", cn: "音乐" },
+  { word: "song", cn: "歌曲" },
+  { word: "story", cn: "故事" },
+  { word: "tale", cn: "传说" },
+  { word: "book", cn: "书" },
+  { word: "page", cn: "页" },
+  { word: "word", cn: "单词" },
+  { word: "letter", cn: "字母" },
+  { word: "sentence", cn: "句子" },
+  { word: "name", cn: "名字" },
+  { word: "word", cn: "词" },
+  { word: "number", cn: "数字" },
+  { word: "answer", cn: "答案" },
+  { word: "question", cn: "问题" },
+  { word: "problem", cn: "问题" },
+  { word: "idea", cn: "主意" },
+  { word: "way", cn: "方法" },
+  { word: "plan", cn: "计划" },
+  { word: "idea", cn: "想法" },
+  { word: "dream", cn: "梦想" },
+  { word: "hope", cn: "希望" },
+  { word: "luck", cn: "运气" },
+  { word: "life", cn: "生活" },
+  { word: "death", cn: "死亡" },
+  { word: "world", cn: "世界" },
+  { word: "earth", cn: "地球" },
+  { word: "nature", cn: "自然" },
+  { word: "environment", cn: "环境" },
+  { word: "pollution", cn: "污染" },
+  { word: "recycle", cn: "回收" },
+  { word: "energy", cn: "能量" },
+  { word: "power", cn: "力量" },
+  { word: "light", cn: "光" },
+  { word: "sound", cn: "声音" },
+  { word: "noise", cn: "噪音" },
+  { word: "voice", cn: "嗓音" },
+  { word: "smell", cn: "气味" },
+  { word: "taste", cn: "味道" },
+  { word: "touch", cn: "触摸" },
+  { word: "feel", cn: "感觉" },
+  { word: "feeling", cn: "感情" },
+  { word: "smile", cn: "微笑" },
+  { word: "laugh", cn: "大笑" },
+  { word: "cry", cn: "哭" },
+  { word: "tear", cn: "眼泪" },
+  { word: "fear", cn: "害怕" },
+  { word: "brave", cn: "勇敢的" },
+  { word: "shy", cn: "害羞的" },
+  { word: "kind", cn: "善良的" },
+  { word: "nice", cn: "友善的" },
+  { word: "polite", cn: "有礼貌的" },
+  { word: "rude", cn: "粗鲁的" },
+  { word: "honest", cn: "诚实的" },
+  { word: "lazy", cn: "懒的" },
+  { word: "active", cn: "活跃的" },
+  { word: "quiet", cn: "安静的" },
+  { word: "loud", cn: "大声的" },
+  { word: "soft", cn: "柔软的" },
+  { word: "loud", cn: "响亮的" },
+];
+
+// ===== 状态 =====
+let currentIndex = 0;
+let score = 0;
+let correctCount = 0;
+let answeredWords = [];
+let currentWord = "";
+let currentCn = "";
+let currentPos = 0;
+let hintUsed = false;
+let isCorrect = false;
+let shuffledWords = [];
+
+// ===== 初始化 =====
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() {
+  shuffledWords = shuffle(WORD_BANK).slice(0, 50);
+  currentIndex = 0;
+  score = 0;
+  correctCount = 0;
+  answeredWords = [];
+  document.getElementById("score").textContent = score;
+  document.getElementById("total-num").textContent = shuffledWords.length;
+  document.getElementById("practice-page").style.display = "block";
+  document.getElementById("result-page").classList.remove("show");
+  loadWord();
+}
+
+function loadWord() {
+  const item = shuffledWords[currentIndex];
+  currentWord = item.word.toLowerCase();
+  currentCn = item.cn;
+  currentPos = 0;
+  hintUsed = false;
+  isCorrect = false;
+
+  document.getElementById("chinese").textContent = currentCn;
+  document.getElementById("current-num").textContent = currentIndex + 1;
+  document.getElementById("progress").style.width = (currentIndex / shuffledWords.length * 100) + "%";
+  document.getElementById("celebrate").classList.remove("show");
+
+  // 生成方框
+  const boxesEl = document.getElementById("boxes");
+  boxesEl.innerHTML = "";
+  for (let i = 0; i < currentWord.length; i++) {
+    const box = document.createElement("div");
+    box.className = "letter-box";
+    box.dataset.index = i;
+    box.addEventListener("click", () => focusBox(i));
+    boxesEl.appendChild(box);
+  }
+  focusBox(0);
+
+  // 自动聚焦隐藏输入框
+  setTimeout(() => document.getElementById("hidden-input").focus(), 100);
+}
+
+function focusBox(i) {
+  document.querySelectorAll(".letter-box").forEach((b, idx) => {
+    b.classList.toggle("active", idx === i);
+  });
+  currentPos = i;
+}
+
+// ===== 键盘输入处理 =====
+document.getElementById("hidden-input").addEventListener("input", function(e) {
+  const val = e.target.value.toLowerCase();
+  e.target.value = "";
+  if (!val || !/^[a-z]$/.test(val)) return;
+  handleLetter(val);
+});
+
+// 也支持直接键盘按键（不依赖输入框聚焦）
+document.addEventListener("keydown", function(e) {
+  if (document.getElementById("result-page").classList.contains("show")) return;
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    handleBackspace();
+    return;
+  }
+  if (/^[a-zA-Z]$/.test(e.key)) {
+    e.preventDefault();
+    handleLetter(e.key.toLowerCase());
+  }
+});
+
+function handleLetter(letter) {
+  if (isCorrect) return;
+  const boxes = document.querySelectorAll(".letter-box");
+  const box = boxes[currentPos];
+  if (!box || box.classList.contains("correct")) {
+    // 找下一个空框
+    for (let i = 0; i < boxes.length; i++) {
+      if (!boxes[i].classList.contains("correct") && !boxes[i].textContent) {
+        focusBox(i);
+        break;
+      }
+    }
+    return;
+  }
+
+  box.textContent = letter;
+  if (letter === currentWord[currentPos]) {
+    box.classList.remove("active");
+    box.classList.add("correct");
+    currentPos++;
+    if (currentPos < boxes.length) {
+      boxes[currentPos].classList.add("active");
+    }
+    // 检查是否全部完成
+    if (currentPos >= boxes.length) {
+      wordComplete();
+    }
+  } else {
+    box.classList.add("wrong");
+    setTimeout(() => {
+      box.classList.remove("wrong");
+      box.textContent = "";
+    }, 500);
+  }
+}
+
+function handleBackspace() {
+  const boxes = document.querySelectorAll(".letter-box");
+  // 从当前位置往前找一个可删除的
+  for (let i = currentPos; i >= 0; i--) {
+    if (boxes[i] && !boxes[i].classList.contains("correct") && boxes[i].textContent) {
+      boxes[i].textContent = "";
+      boxes[i].classList.remove("wrong");
+      focusBox(i);
+      return;
+    }
+  }
+}
+
+function wordComplete() {
+  isCorrect = true;
+  correctCount++;
+  const gain = hintUsed ? 5 : 10;
+  score += gain;
+  document.getElementById("score").textContent = score;
+
+  const celebrate = document.getElementById("celebrate");
+  celebrate.textContent = hintUsed ? `👍 答对了！+${gain}分` : `🎉 太棒了！+${gain}分`;
+  celebrate.classList.add("show");
+
+  setTimeout(() => {
+    nextWord();
+  }, 1500);
+}
+
+function showHint() {
+  if (hintUsed || isCorrect) return;
+  hintUsed = true;
+  const boxes = document.querySelectorAll(".letter-box");
+  // 找第一个还没填对的框，显示正确字母
+  for (let i = 0; i < boxes.length; i++) {
+    if (!boxes[i].classList.contains("correct")) {
+      boxes[i].textContent = currentWord[i];
+      boxes[i].classList.add("revealed");
+      boxes[i].classList.remove("active");
+      // 跳到下一个框
+      for (let j = i + 1; j < boxes.length; j++) {
+        if (!boxes[j].classList.contains("correct")) {
+          boxes[j].classList.add("active");
+          currentPos = j;
+          break;
+        }
+      }
+      // 如果后面没有空框了，检查是否完成
+      let allDone = true;
+      for (let k = 0; k < boxes.length; k++) {
+        if (!boxes[k].classList.contains("correct") && !boxes[k].classList.contains("revealed")) {
+          allDone = false;
+          break;
+        }
+      }
+      if (allDone) {
+        // 所有框都填了，标记为正确
+        boxes.forEach(b => {
+          b.classList.remove("revealed");
+          b.classList.add("correct");
+        });
+        wordComplete();
+      }
+      break;
+    }
+  }
+}
+
+function skipWord() {
+  nextWord();
+}
+
+function nextWord() {
+  currentIndex++;
+  if (currentIndex >= shuffledWords.length) {
+    showResult();
+  } else {
+    loadWord();
+  }
+}
+
+function showResult() {
+  document.getElementById("practice-page").style.display = "none";
+  document.getElementById("result-page").classList.add("show");
+  document.getElementById("final-correct").textContent = correctCount;
+  document.getElementById("final-total").textContent = shuffledWords.length;
+  const rate = Math.round(correctCount / shuffledWords.length * 100);
+  document.getElementById("final-rate").textContent = rate + "%";
+
+  const emoji = document.getElementById("result-emoji");
+  const title = document.getElementById("result-title");
+  if (rate >= 90) {
+    emoji.textContent = "🏆";
+    title.textContent = "太厉害了！";
+  } else if (rate >= 60) {
+    emoji.textContent = "👍";
+    title.textContent = "不错哦，继续加油！";
+  } else {
+    emoji.textContent = "💪";
+    title.textContent = "多多练习会更好！";
+  }
+}
+
+function restart() {
+  init();
+}
+
+// 点击卡片任意地方聚焦输入
+document.querySelector(".card").addEventListener("click", function() {
+  if (!document.getElementById("result-page").classList.contains("show")) {
+    document.getElementById("hidden-input").focus();
+  }
+});
+
+// 启动
+init();
+</script>
+</body>
+</html>
